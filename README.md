@@ -42,6 +42,7 @@
   - [2.9. Git 설정 및 GitHub 연동](#29-git-설정-및-github-연동)
   - [2.10. Git 설정 및 GitHub 연동](#210-git-설정-및-github-연동)
 - [3. 트러블 슈팅](#3-트러블-슈팅)
+  - [3.1. 폴더 이동 후 원본 폴더가 잔존하는 현상 (Ghost Folder)](#31-폴더-이동-후-원본-폴더가-잔존하는-현상-ghost-folder)
 
 # 2. 실습 과정 및 로그 기록 
 
@@ -575,7 +576,19 @@ Keep this data
 
 ### 2.9.1. Git 설정<!-- omit in toc -->
 ```bash
+user ~/my-dev-atelier % git config --list | grep -E "user|init"
+user.name=sohye-pk
+user.email=sohye.pk@gmail.com
+init.defaultbranch=main
 ```
+
+### 2.9.2. VSCode & GitHub 연동<!-- omit in toc -->
+```bash
+user ~/my-dev-atelier % git remote -v                              
+origin  https://github.com/sohye-pk/my-dev-atelier.git (fetch)
+origin  https://github.com/sohye-pk/my-dev-atelier.git (push)
+```
+![GitHub/VSCode 연동](./assets/github-vscode-connection.png)
 
 ## 2.10. Git 설정 및 GitHub 연동
 
@@ -586,3 +599,70 @@ Keep this data
 
 
 # 3. 트러블 슈팅
+
+## 3.1. 폴더 이동 후 원본 폴더가 잔존하는 현상 (Ghost Folder)
+
+### 3.1.1. 문제<!-- omit in toc -->
+폴더 이동 후 잠시 자리를 비우고 돌아오니 원본 위치에도 폴더가 그대로 남아 있는 데이터 중복 현상 발견
+<details>
+<summary>문제 로그</summary>
+
+```bash
+# 기존 파일/폴더 목록
+user /Users/Shared % ls
+SC Info   my-dev-atelier
+
+# 이동 폴더 생성
+user /Users/Shared % mkdir user
+
+# 파일 이동 후 목록 확인
+user /Users/Shared % mv my-dev-atelier user/my-dev-atelier
+user /Users/Shared % ls
+SC Info user
+user /Users/Shared % cd user  
+user /Users/Shared/user % ls
+my-dev-atelier
+
+# 문제 발생
+  [Restored Jul 28, 2026 at 2:37:25 PM]
+Last login: Tue Jul 28 14:37:22 on console
+user my-dev-atelier % ls ../..
+SC Info   my-dev-atelier  user
+user my-dev-atelier % cd ../.. 
+user Shared % ls
+SC Info   my-dev-atelier  user
+```
+</details>
+
+### 3.1.2. 원인 가설<!-- omit in toc -->
+1. APFS 파일 시스템의 '원자적 작업' 중단
+    - mv 명령어는 내부적으로 복사(Copy) -> 삭제(Delete) 단계를 거침.
+데이터 복사는 완료되어 목적지에 기록되었으나, 원본을 삭제하는 '커밋(Commit)' 단계가 디스크에 물리적으로 반영되기 직전에 시스템 지연이나 세션 중단이 발생했을 가능성.
+1. macOS 로컬 스냅샷(Snapshot)에 의한 롤백
+    - macOS(APFS)는 약 1시간 간격으로 시스템 상태를 스냅샷으로 저장함.
+13:20(명령어 실행)과 14:37(세션 복구) 사이의 시간 간격을 고려할 때, 시스템이 예기치 않게 재시작되면서 명령어 실행 직전의 안정적인 스냅샷 상태로 파일 시스템 일부가 복구되었을 가능성.
+이 과정에서 이미 디스크에 써진 '새 폴더'는 유지되고, 삭제되었어야 할 '원본 폴더'가 롤백되어 다시 나타남.
+### 3.1.3. 확인 및 추론<!-- omit in toc -->
+- 로그 분석을 통한 추론
+
+시간대 대조: 사용자가 자리를 비운 13:20 이후부터 세션이 복구된 14:37 사이의 공백은 시스템이 '절전 모드 해제 실패' 또는 '커널 패닉' 등으로 인해 정상적인 디스크 기록 프로세스를 완료하지 못했음을 시사함.
+
+세션 복구 메시지: [Restored...] 메시지는 터미널 앱이 비정상 종료 후 이전 상태를 강제로 불러왔음을 의미하며, 이 과정에서 파일 시스템의 실제 상태와 터미널의 가상 상태 간의 충돌이 가시화됨.위치에 잔존하는 폴더는 시스템 복구 과정에서 생성된 '유령 폴더'이므로 rm -rf 명령어로 안전하게 삭제.
+
+* (참고) 향후 동일 현상 발생 시 검증 방법
+
+inode 번호 비교: ls -id [원본폴더] [목적지폴더]를 입력하여 고유 번호(inode)를 비교.
+번호가 같다면: 하드 링크 형태의 오류.
+번호가 다르다면: 시스템 복구 과정에서 별개로 생성/복구된 객체임이 확실함.
+
+### 3.1.4. 해결 및 대안<!-- omit in toc -->
+- 해결: 데이터 무결성 확인 후 수동 삭제 
+
+목적지(`user/`)로 이동된 폴더 내 파일들이 깨지지 않고 정상적으로 존재하는지 확인.
+원본 위치에 잔존하는 폴더는 시스템 복구 과정에서 생성된 '유령 폴더'이므로 `rm -rf` 명령어로 안전하게 삭제.
+
+- 대안 및 예방
+
+대용량/중요 폴더 이동 시: `mv` 대신 `rsync -aP [원본] [목적지]`를 사용하면 전송 과정을 실시간으로 모니터링할 수 있으며, 전송 완료 후 원본을 지우는 방식(`--remove-source-files`)이 더 안전함.
+
+정기적 디스크 검사: 이러한 현상이 잦을 경우 `디스크 유틸리티`의 '검사/복구(First Aid)' 기능을 통해 파일 시스템의 일관성을 점검.
