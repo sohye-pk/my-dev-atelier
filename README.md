@@ -393,6 +393,43 @@ exit
 user ~/my-dev-atelier % 
 ```
 
+### 2.5.3. 컨테이너 종료/유지<!-- omit in toc -->
+```bash
+# attach
+# 기존 컨테이너의 메인 프로세스와 연동됨
+user ~/my-dev-atelier % docker run -itd --name attach-test ubuntu bash
+0b0d6b950590970e7e400f768b39bcfbdf2b0420c5c5a0be439b26484850c646
+
+# 1. 실행 중인 컨테이너에 접속
+user ~/my-dev-atelier % docker attach attach-test
+
+# 2. 접속된 상태에서 exit 입력
+root@0b0d6b950590:/# exit
+exit
+
+# 3. 컨테이너 상태 확인(Exited)
+user ~/my-dev-atelier % docker ps -a
+CONTAINER ID   IMAGE     COMMAND   CREATED          STATUS                     PORTS     NAMES
+0b0d6b950590   ubuntu    "bash"    22 seconds ago   Exited (0) 2 seconds ago             attach-test
+
+# exec
+# 기존 컨테이너의 실행에 영향을 미치지 않음
+user ~/my-dev-atelier % docker run -itd --name exec-test ubuntu bash
+1d76145b84d6699371898c42f8b743db44d5a77597c63e470eb06594ee1dc9e5
+
+# 2. 이번엔 exec로 접속
+user ~/my-dev-atelier % docker exec -it exec-test bash
+
+# 3. 접속된 상태에서 exit 입력
+root@1d76145b84d6:/# exit
+exit
+
+# 4. 컨테이너 상태 확인(Up)
+user ~/my-dev-atelier % docker ps   
+CONTAINER ID   IMAGE     COMMAND   CREATED          STATUS          PORTS     NAMES
+1d76145b84d6   ubuntu    "bash"    21 seconds ago   Up 20 seconds             exec-test
+```
+
 ## 2.6. 기존 Dockerfile 기반 커스텀 이미지 제작
 
 ### 2.6.1. 커스텀 이미지 기본 사항<!-- omit in toc -->
@@ -473,26 +510,71 @@ user ~/my-dev-atelier % docker logs my-web-container
 </details>
 
 ## 2.7. 포트 매핑 및 접속 결과
+```bash
+# Docker Hub의 이미지를 임의 포트를 설정하여 
+user ~/my-dev-atelier % docker run -p 730:80 nginx
+```
+![포트 매핑 결과1](./assets/port-connect-success.png)
 
-![포트 매핑 결과](./assets/custom-page-build-success.png)
+```bash
+user ~/my-dev-atelier % docker run -d -p 1234:8080 --name my-web-container my-custom-nginx
+```
+![포트 매핑 결과2](./assets/custom-page-build-success.png)
 
 ## 2.8. Docker 볼륨 영속성 검증
 
-### 2.8.1. 운영 리소스<!-- omit in toc -->
+### 2.8.1. 바인드 마인트<!-- omit in toc -->
+- 내 컴퓨터의 특정 폴더와 컨테이너 내부의 폴더를 실시간으로 연결
 ```bash
+# 1. 호스트에 파일 생성
+user ~/my-dev-atelier % echo "Before Change" > test.txt
 
+# 2. 바인드 마운트로 컨테이너 실행
+user ~/my-dev-atelier % docker run -it --name bind-test -v .:/app ubuntu bash
+
+# 3. 기존 파일 내용 확인
+root@f0bd5c420396:/# cat /app/test.txt
+Before Change
+
+# 4. (다른 터미널에서) 호스트 파일 수정 및 확인
+user2 ~/my-dev-atelier % echo "After Change" > test.txt
+user2 ~/my-dev-atelier % cat test.txt
+After Change
+
+# 5. 기존 터미널에서 수정된 내용 확인
+root@f0bd5c420396:/# cat /app/test.txt
+After Change
 ```
 
-### 2.8.1. 운영 리소스<!-- omit in toc -->
+### 2.8.2. 볼륨 영속성<!-- omit in toc -->
 ```bash
+# 1. 볼륨 생성 및 확인
+user ~/my-dev-atelier % docker volume create vol
+vol
+user ~/my-dev-atelier % docker volume ls
+DRIVER    VOLUME NAME
+local     vol
 
+# 2. 컨테이너 실행 및 데이터 쓰기
+user ~/my-dev-atelier % docker run -it --name vol-test1 -v vol:/data ubuntu bash
+root@eba4c824d7f1:/# echo "Keep this data" > /data/save.txt
+root@eba4c824d7f1:/# exit
+exit
+
+# 3. 컨테이너 삭제
+user ~/my-dev-atelier % docker rm vol-test1
+vol-test1
+
+# 4. 새 컨테이너에서 볼륨 연결 후 확인
+user ~/my-dev-atelier % docker run -it --name vol-test2 -v vol:/data ubuntu bash
+root@32162810be10:/# cat /data/save.txt
+Keep this data
 ```
 
 ## 2.9. Git 설정 및 GitHub 연동
 
-### 2.9.1. 운영 리소스<!-- omit in toc -->
+### 2.9.1. Git 설정<!-- omit in toc -->
 ```bash
-
 ```
 
 ## 2.10. Git 설정 및 GitHub 연동
