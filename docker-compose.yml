@@ -1,0 +1,6 @@
+services:
+  web:
+    image: nginx:latest
+    container_name: web-server
+    ports:
+      - 8080:80
