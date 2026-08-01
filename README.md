@@ -42,10 +42,9 @@
   - [2.9. Git 설정 및 GitHub 연동](#29-git-설정-및-github-연동)
   - [2.10. 보너스 과제](#210-보너스-과제)
     - [2.10.1. Docker Compose 기초](#2101-docker-compose-기초)
-    - [2.10.2. Docker Compose 기초](#2102-docker-compose-기초)
-    - [2.10.3. Docker Compose 기초](#2103-docker-compose-기초)
-    - [2.10.4. Docker Compose 기초](#2104-docker-compose-기초)
-    - [2.10.5. Docker Compose 기초](#2105-docker-compose-기초)
+    - [2.10.2. Docker Compose 멀티 컨테이너](#2102-docker-compose-멀티-컨테이너)
+    - [2.10.3. Docker Compose 운영](#2103-docker-compose-운영)
+    - [2.10.4. Docker 환경 변수](#2104-docker-환경-변수)
 - [3. 트러블 슈팅](#3-트러블-슈팅)
   - [3.1. 폴더 이동 후 원본 폴더가 잔존하는 현상 (Ghost Folder)](#31-폴더-이동-후-원본-폴더가-잔존하는-현상-ghost-folder)
   - [3.2. Git 커밋 작성자 정보 불일치 및 메타데이터 관리 오류](#32-git-커밋-작성자-정보-불일치-및-메타데이터-관리-오류)
@@ -602,32 +601,28 @@ origin  https://github.com/sohye-pk/my-dev-atelier.git (push)
 
 #### 2.10.1.1. 단일 서비스 실행<!-- omit in toc -->
 ```bash
-
+user ~/my-dev-atelier/compose/basic % docker compose up -d
+[+] Running 2/2
+ ✔ Network basic_default  Created                                    0.1s 
+ ✔ Container web-server   Started   
 ```
-### 2.10.2. Docker Compose 기초
+### 2.10.2. Docker Compose 멀티 컨테이너
 
-#### 2.10.2.1. 단일 서비스 실행<!-- omit in toc -->
+#### 2.10.2.1. 멀티 서비스 실행<!-- omit in toc -->
 ```bash
 
 ```
 
-### 2.10.3. Docker Compose 기초
+### 2.10.3. Docker Compose 운영
 
-#### 2.10.3.1. 단일 서비스 실행<!-- omit in toc -->
+#### 2.10.3.1. 운영 로그<!-- omit in toc -->
 ```bash
 
 ```
 
-### 2.10.4. Docker Compose 기초
+### 2.10.4. Docker 환경 변수
 
-#### 2.10.4.1. 단일 서비스 실행<!-- omit in toc -->
-```bash
-
-```
-
-### 2.10.5. Docker Compose 기초
-
-#### 2.10.5.1. 단일 서비스 실행<!-- omit in toc -->
+#### 2.10.4.1. 환경 변수 활용<!-- omit in toc -->
 ```bash
 
 ```
