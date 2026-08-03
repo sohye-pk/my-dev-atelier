@@ -1,14 +1,25 @@
 services:
-  web:
+  # 웹 서버 서비스
+  web-server:
     image: nginx:latest
-    container_name: my-web
     ports:
       - "8080:80"
     volumes:
-      - ./web:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - redis
+      - api-server
 
-  redis:
-    image: redis:latest
-    container_name: my-redis
+  # API 서버 서비스 (보조 1)
+  api-server:
+    image: python:3.9-slim
+    command: >
+      sh -c "pip install flask redis && python -u app.py"
+    volumes:
+      - ./app.py:/app.py
+    working_dir: /
+    depends_on:
+      - redis-db
+
+  # 데이터베이스 서비스 (보조 2)
+  redis-db:
+    image: redis:alpine

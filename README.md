@@ -45,6 +45,7 @@
     - [2.10.2. Docker Compose 멀티 컨테이너](#2102-docker-compose-멀티-컨테이너)
     - [2.10.3. Docker Compose 운영](#2103-docker-compose-운영)
     - [2.10.4. Docker 환경 변수](#2104-docker-환경-변수)
+    - [2.10.5. GitHub SSH 키 설정](#2105-github-ssh-키-설정)
 - [3. 트러블 슈팅](#3-트러블-슈팅)
   - [3.1. 폴더 이동 후 원본 폴더가 잔존하는 현상 (Ghost Folder)](#31-폴더-이동-후-원본-폴더가-잔존하는-현상-ghost-folder)
   - [3.2. Git 커밋 작성자 정보 불일치 및 메타데이터 관리 오류](#32-git-커밋-작성자-정보-불일치-및-메타데이터-관리-오류)
@@ -608,23 +609,337 @@ user ~/my-dev-atelier/compose/basic % docker compose up -d
 ```
 ### 2.10.2. Docker Compose 멀티 컨테이너
 
-#### 2.10.2.1. 멀티 서비스 실행<!-- omit in toc -->
+#### 2.10.2.1. 멀티 컨테이너 서비스 실행 및 컨테이너 간 통신 확인<!-- omit in toc -->
 ```bash
-
+user ~/my-dev-atelier/compose/multi-container % docker compose up -d
+[+] up 4/4
+ ✔ Network multi-container_default        Created                                                                                                                             0.1s
+ ✔ Container multi-container-redis-db-1   Started                                                                                                                             0.8s
+ ✔ Container multi-container-api-server-1 Started                                                                                                                             0.9s
+ ✔ Container multi-container-web-server-1 Started 
 ```
+![Docker Compose 멀티 컨테이너 실행 결과](./assets/compose-multi-container.png)
+<details>
+<summary>로그 보기</summary>
+
+```bash
+web-server-1  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+web-server-1  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+api-server-1  | Collecting flask
+api-server-1  |   Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.4/103.4 kB 5.1 MB/s eta 0:00:00
+api-server-1  | Collecting redis
+api-server-1  |   Downloading redis-7.0.1-py3-none-any.whl (339 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 339.9/339.9 kB 23.9 MB/s eta 0:00:00
+api-server-1  | Collecting itsdangerous>=2.2.0
+api-server-1  |   Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+api-server-1  | Collecting markupsafe>=2.1.1
+api-server-1  |   Downloading markupsafe-3.0.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+api-server-1  | Collecting importlib-metadata>=3.6.0
+api-server-1  |   Downloading importlib_metadata-8.7.1-py3-none-any.whl (27 kB)
+api-server-1  | Collecting click>=8.1.3
+api-server-1  |   Downloading click-8.1.8-py3-none-any.whl (98 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 98.2/98.2 kB 11.4 MB/s eta 0:00:00
+api-server-1  | Collecting blinker>=1.9.0
+api-server-1  |   Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+api-server-1  | Collecting jinja2>=3.1.2
+api-server-1  |   Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 14.6 MB/s eta 0:00:00
+redis-db-1    | Starting Redis Server
+redis-db-1    | 1:C 03 Aug 2026 11:03:37.414 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis-db-1    | 1:C 03 Aug 2026 11:03:37.414 * Redis version=8.10.0, bits=64, commit=00000000, modified=1, pid=1, just started
+redis-db-1    | 1:C 03 Aug 2026 11:03:37.414 * Configuration loaded
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.414 * monotonic clock: POSIX clock_gettime
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * Running mode=standalone, port=6379.
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf> RedisBloom version 8.10.0 (Git=unknown)
+api-server-1  | Collecting werkzeug>=3.1.0
+api-server-1  |   Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 226.5/226.5 kB 18.4 MB/s eta 0:00:00
+api-server-1  | Collecting async-timeout>=4.0.3
+api-server-1  |   Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf> Registering configuration options: [
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { bf-error-rate       :      0.01 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { bf-initial-size     :       100 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { bf-expansion-factor :         2 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { cf-bucket-size      :         2 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { cf-initial-size     :      1024 }
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+web-server-1  | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+web-server-1  | 10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+web-server-1  | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { cf-max-iterations   :        20 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { cf-expansion-factor :         1 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf>     { cf-max-expansions   :        32 }
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.415 * <bf> ]
+api-server-1  | Collecting zipp>=3.20
+api-server-1  |   Downloading zipp-3.23.1-py3-none-any.whl (10 kB)
+api-server-1  | Installing collected packages: zipp, markupsafe, itsdangerous, click, blinker, async-timeout, werkzeug, redis, jinja2, importlib-metadata, flask
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.416 * Module 'bf' loaded from /usr/local/lib/redis/modules//redisbloom.so
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.419 * <search> search-workers default: 6 (min of MAX_WORKER_THREADS=16 and CPU cores)
+api-server-1  | Successfully installed async-timeout-5.0.1 blinker-1.9.0 click-8.1.8 flask-3.1.3 importlib-metadata-8.7.1 itsdangerous-2.2.0 jinja2-3.1.6 markupsafe-3.0.3 redis-7.0.1 werkzeug-3.1.8 zipp-3.23.1
+api-server-1  | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+api-server-1  | 
+api-server-1  | [notice] A new release of pip is available: 23.0.1 -> 26.0.1
+api-server-1  | [notice] To update, run: pip install --upgrade pip
+web-server-1  | /docker-entrypoint.sh: Configuration complete; ready for start up
+web-server-1  | 192.168.97.1 - - [03/Aug/2026:11:04:36 +0000] "GET / HTTP/1.1" 200 62 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+web-server-1  | 192.168.97.1 - - [03/Aug/2026:11:04:37 +0000] "GET / HTTP/1.1" 200 62 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+web-server-1  | 192.168.97.1 - - [03/Aug/2026:11:04:39 +0000] "GET / HTTP/1.1" 200 62 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+web-server-1  | 192.168.97.1 - - [03/Aug/2026:11:05:03 +0000] "GET / HTTP/1.1" 200 62 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36"
+api-server-1  |  * Serving Flask app 'app'
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Redis version found by RedisSearch : 8.10.0 - oss
+api-server-1  |  * Debug mode: off
+api-server-1  | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+api-server-1  |  * Running on all addresses (0.0.0.0)
+api-server-1  |  * Running on http://127.0.0.1:5000
+api-server-1  |  * Running on http://192.168.97.3:5000
+api-server-1  | Press CTRL+C to quit
+api-server-1  | Nginx로부터 요청을 받았습니다!
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> RediSearch version 8.10.0 (Git=)
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> gc: ON, prefix min length: 2, min word length to stem: 4, prefix max expansions: 200, query timeout (ms): 500, timeout policy: return, oom policy: return, cursor read size: 1000, cursor max idle (ms): 300000, max doctable size: 1000000, max number of search results:  1000000, default scorer: BM25STD, 
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Initialized thread pools!
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Enabled workers threadpool of size 6
+api-server-1  | Redis에 접속해서 숫자를 1로 올렸습니다.
+api-server-1  | 192.168.97.4 - - [03/Aug/2026 11:04:36] "GET / HTTP/1.1" 200 -
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Subscribe to config changes
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Subscribe to cluster slot migration events
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Subscribe to cluster topology change events
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Enabled role change notification
+api-server-1  | Nginx로부터 요청을 받았습니다!
+api-server-1  | Redis에 접속해서 숫자를 2로 올렸습니다.
+api-server-1  | 192.168.97.4 - - [03/Aug/2026 11:04:37] "GET / HTTP/1.1" 200 -
+api-server-1  | Nginx로부터 요청을 받았습니다!
+api-server-1  | Redis에 접속해서 숫자를 3로 올렸습니다.
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * <search> Cluster configuration: AUTO partitions, type: 0, coordinator timeout: 0ms
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.420 * Module 'search' loaded from /usr/local/lib/redis/modules//redisearch.so
+redis-db-1    | 1:M 03 Aug 2026 11:03:37.421 * <timeseries> RedisTimeSeries version 81000, git_sha=
+api-server-1  | 192.168.97.4 - - [03/Aug/2026 11:04:39] "GET / HTTP/1.1" 200 -
+api-server-1  | Nginx로부터 요청을 받았습니다!
+api-server-1  | Redis에 접속해서 숫자를 4로 올렸습니다.
+api-server-1  | 192.168.97.4 - - [03/Aug/2026 11:05:03] "GET / HTTP/1.1" 200 -
+```
+</details>
 
 ### 2.10.3. Docker Compose 운영
 
-#### 2.10.3.1. 운영 로그<!-- omit in toc -->
+#### 2.10.3.1. 실행<!-- omit in toc -->
 ```bash
-
+user ~/my-dev-atelier/compose/multi-container % docker compose up -d
+[+] up 4/4
+ ✔ Network multi-container_default        Created                                                                                                                             0.1s
+ ✔ Container multi-container-redis-db-1   Started                                                                                                                             0.9s
+ ✔ Container multi-container-api-server-1 Started                                                                                                                             0.9s
+ ✔ Container multi-container-web-server-1 Started   
 ```
+
+#### 2.10.3.1. 종료<!-- omit in toc -->
+```bash
+user ~/my-dev-atelier/compose/multi-container % docker compose down
+[+] down 4/4
+ ✔ Container multi-container-web-server-1 Removed                                                                                                                             0.4s
+ ✔ Container multi-container-api-server-1 Removed                                                                                                                            10.3s
+ ✔ Container multi-container-redis-db-1   Removed                                                                                                                             0.4s
+ ✔ Network multi-container_default        Removed   
+```
+
+#### 2.10.3.1. 상태<!-- omit in toc -->
+```bash
+user ~/my-dev-atelier/compose/multi-container % docker compose ps
+NAME                           IMAGE             COMMAND                  SERVICE      CREATED          STATUS          PORTS
+multi-container-api-server-1   python:3.9-slim   "sh -c 'pip install …"   api-server   20 seconds ago   Up 19 seconds   
+multi-container-redis-db-1     redis:alpine      "docker-entrypoint.s…"   redis-db     20 seconds ago   Up 19 seconds   6379/tcp
+multi-container-web-server-1   nginx:latest      "/docker-entrypoint.…"   web-server   20 seconds ago   Up 18 seconds   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp
+```
+
+#### 2.10.3.1. 로그<!-- omit in toc -->
+```bash
+user ~/my-dev-atelier/compose/multi-container % docker compose logs
+api-server-1  | Collecting flask
+api-server-1  |   Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+```
+<details>
+<summary>전체 로그 보기</summary>
+
+```bash
+user ~/my-dev-atelier/compose/multi-container % docker compose logs
+api-server-1  | Collecting flask
+api-server-1  |   Downloading flask-3.1.3-py3-none-any.whl (103 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 103.4/103.4 kB 5.0 MB/s eta 0:00:00
+api-server-1  | Collecting redis
+api-server-1  |   Downloading redis-7.0.1-py3-none-any.whl (339 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 339.9/339.9 kB 21.9 MB/s eta 0:00:00
+api-server-1  | Collecting click>=8.1.3
+api-server-1  |   Downloading click-8.1.8-py3-none-any.whl (98 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 98.2/98.2 kB 11.8 MB/s eta 0:00:00
+api-server-1  | Collecting werkzeug>=3.1.0
+api-server-1  |   Downloading werkzeug-3.1.8-py3-none-any.whl (226 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 226.5/226.5 kB 20.1 MB/s eta 0:00:00
+api-server-1  | Collecting itsdangerous>=2.2.0
+api-server-1  |   Downloading itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+api-server-1  | Collecting jinja2>=3.1.2
+api-server-1  |   Downloading jinja2-3.1.6-py3-none-any.whl (134 kB)
+api-server-1  |      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 134.9/134.9 kB 15.3 MB/s eta 0:00:00
+api-server-1  | Collecting blinker>=1.9.0
+api-server-1  |   Downloading blinker-1.9.0-py3-none-any.whl (8.5 kB)
+api-server-1  | Collecting importlib-metadata>=3.6.0
+api-server-1  |   Downloading importlib_metadata-8.7.1-py3-none-any.whl (27 kB)
+api-server-1  | Collecting markupsafe>=2.1.1
+api-server-1  |   Downloading markupsafe-3.0.3-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+api-server-1  | Collecting async-timeout>=4.0.3
+api-server-1  |   Downloading async_timeout-5.0.1-py3-none-any.whl (6.2 kB)
+api-server-1  | Collecting zipp>=3.20
+api-server-1  |   Downloading zipp-3.23.1-py3-none-any.whl (10 kB)
+api-server-1  | Installing collected packages: zipp, markupsafe, itsdangerous, click, blinker, async-timeout, werkzeug, redis, jinja2, importlib-metadata, flask
+api-server-1  | Successfully installed async-timeout-5.0.1 blinker-1.9.0 click-8.1.8 flask-3.1.3 importlib-metadata-8.7.1 itsdangerous-2.2.0 jinja2-3.1.6 markupsafe-3.0.3 redis-7.0.1 werkzeug-3.1.8 zipp-3.23.1
+api-server-1  | WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv
+api-server-1  | 
+api-server-1  | [notice] A new release of pip is available: 23.0.1 -> 26.0.1
+api-server-1  | [notice] To update, run: pip install --upgrade pip
+api-server-1  |  * Serving Flask app 'app'
+api-server-1  |  * Debug mode: off
+api-server-1  | WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+api-server-1  |  * Running on all addresses (0.0.0.0)
+api-server-1  |  * Running on http://127.0.0.1:5000
+api-server-1  |  * Running on http://192.168.97.3:5000
+api-server-1  | Press CTRL+C to quit
+web-server-1  | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+web-server-1  | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+web-server-1  | 10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+web-server-1  | 10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+web-server-1  | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+web-server-1  | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+web-server-1  | /docker-entrypoint.sh: Configuration complete; ready for start up
+redis-db-1    | Starting Redis Server
+redis-db-1    | 1:C 03 Aug 2026 11:20:30.018 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+redis-db-1    | 1:C 03 Aug 2026 11:20:30.018 * Redis version=8.10.0, bits=64, commit=00000000, modified=1, pid=1, just started
+redis-db-1    | 1:C 03 Aug 2026 11:20:30.018 * Configuration loaded
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.018 * monotonic clock: POSIX clock_gettime
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.019 * Running mode=standalone, port=6379.
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf> RedisBloom version 8.10.0 (Git=unknown)
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf> Registering configuration options: [
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { bf-error-rate       :      0.01 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { bf-initial-size     :       100 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { bf-expansion-factor :         2 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { cf-bucket-size      :         2 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { cf-initial-size     :      1024 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { cf-max-iterations   :        20 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { cf-expansion-factor :         1 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf>     { cf-max-expansions   :        32 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * <bf> ]
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.020 * Module 'bf' loaded from /usr/local/lib/redis/modules//redisbloom.so
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.032 * <search> search-workers default: 6 (min of MAX_WORKER_THREADS=16 and CPU cores)
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.032 * <search> Redis version found by RedisSearch : 8.10.0 - oss
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.032 * <search> RediSearch version 8.10.0 (Git=)
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> gc: ON, prefix min length: 2, min word length to stem: 4, prefix max expansions: 200, query timeout (ms): 500, timeout policy: return, oom policy: return, cursor read size: 1000, cursor max idle (ms): 300000, max doctable size: 1000000, max number of search results:  1000000, default scorer: BM25STD, 
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Initialized thread pools!
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Enabled workers threadpool of size 6
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Subscribe to config changes
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Subscribe to cluster slot migration events
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Subscribe to cluster topology change events
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Enabled role change notification
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * <search> Cluster configuration: AUTO partitions, type: 0, coordinator timeout: 0ms
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.033 * Module 'search' loaded from /usr/local/lib/redis/modules//redisearch.so
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries> RedisTimeSeries version 81000, git_sha=
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries> Redis version found by RedisTimeSeries : 8.10.0 - oss
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries> Registering configuration options: [
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-compaction-policy   :              }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-num-threads         :            3 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-libmr-protocol      :     INTERNAL }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-retention-policy    :            0 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-duplicate-policy    :        block }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-chunk-size-bytes    :         4096 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-encoding            :   compressed }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-ignore-max-time-diff:            0 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-ignore-max-val-diff :     0.000000 }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries>     { ts-topology-events     :         true }
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries> ]
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.034 * <timeseries> Detected redis oss (cluster-enabled=no)
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.035 * <timeseries> Subscribe to ASM events
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.035 * <timeseries> Subscribe to topology changes events
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.035 * <timeseries> Enabled diskless replication
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.035 * Module 'timeseries' loaded from /usr/local/lib/redis/modules//redistimeseries.so
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Created new data type 'ReJSON-RL'
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> version: 81000 git sha: unknown branch: unknown
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V1 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V2 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V3 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V4 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V5 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V6 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V7 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Exported RedisJSON_V8 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Enabled diskless replication
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <ReJSON> Initialized shared string cache, thread safe: true.
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * Module 'ReJSON' loaded from /usr/local/lib/redis/modules//rejson.so
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.037 * <search> Acquired RedisJSON_V8 API
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.038 * Server initialized
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.038 * Ready to accept connections tcp
+redis-db-1    | 1:M 03 Aug 2026 11:20:30.038 # WARNING: Redis does not require authentication and is not protected by network restrictions. Redis will accept connections from any IP address on any network interface.
+```
+</details>
 
 ### 2.10.4. Docker 환경 변수
 
-#### 2.10.4.1. 환경 변수 활용<!-- omit in toc -->
+#### 2.10.4.1. Dockerfile<!-- omit in toc -->
 ```bash
+# 빌드
+user ~/my-dev-atelier/compose/environment-variable % docker build -t my-app .
+[+] Building 2.3s (9/9) FINISHED 
+...
 
+# 실행
+user ~/my-dev-atelier/compose/environment-variable % docker run -p 8080:8080 my-app
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://192.168.215.2:8080
+
+ # 포트 변경을 원할 시 (-e 옵션으로 덮어쓰기)
+ docker run -p 7070:7070 -e APP_PORT=7070 my-app 
+```
+![Dockerfile에서 환경변수 사용](./assets/env-dockerfile.png)
+
+#### 2.10.4.2. Dockerfile<!-- omit in toc -->
+```bash
+user ~/my-dev-atelier/compose/environment-variable % docker compose up
+[+] Building 2.5s (11/11) FINISHED   
+...     
+```
+![compose에서 환경변수 사용](./assets/env-compose.png)
+
+| 구분 | Dockerfile (ENV) | Docker Compose (environment) |
+|---|---|---|
+| 주요 목적 | 이미지의 기본값 설정 | 실행 환경별 맞춤 설정 |
+| 시점 | 이미지 빌드 시점에 설정됨 | 컨테이너 실행 시점에 주입됨 |
+| 유연성 | 낮음 (변경 시 이미지 재빌드 필요) | 높음 (Compose 설정 변경 후 실행 환경 변경 가능) |
+
+### 2.10.5. GitHub SSH 키 설정
+
+#### 2.10.5.1. 연결 확인<!-- omit in toc -->
+```bash
+# SSH 키 생성
+# ed25519는 최신 보안 표준 방식
+ssh-keygen -t ed25519 -C "email"
+
+# 연결 확인
+user ~/my-dev-atelier % ssh -T git@github.com                              
+The authenticity of host 'github.com (...)' can't be established.
+ED25519 key fingerprint is SHA256:+...
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'github.com' (ED25519) to the list of known hosts.
+Hi 이름! You've successfully authenticated, but GitHub does not provide shell access.
+
+# HTTPS로 연결된 저장소 변경 
+# 변경 시 git remote set-url origin git@github.com:사용자명/저장소명.git
+# 추가 시 git remote add origin git@github.com:사용자명/저장소명.git
+user ~/my-dev-atelier % git remote set-url origin git@github.com:sohye-pk/my-dev-atelier.git
 ```
 
 # 3. 트러블 슈팅
@@ -706,7 +1021,7 @@ SC Info   my-dev-atelier  user
 - Git의 환경 변수 자동 할당 정책 (Fallback Mechanism)
   - 현상: 로컬 환경 설정(`git config`) 누락 시 시스템 정보를 강제 할당.
   - 상세: Git은 커밋 생성 시 `user.name`과 `user.email`이 설정되어 있지 않으면, 에러를 내는 대신 현재 운영체제의 사용자 계정명과 호스트명을 조합해 임의로 작성자 정보를 생성함. 사용자는 인증 절차(토큰 입력 등)를 마쳤으므로 모든 설정이 끝났다고 오판하기 쉬움.
-  - 
+  
 ### 3.2.3. 확인 및 추론<!-- omit in toc -->
 - 설정 및 로그 대조
   - `git config --list`: 현재 로컬/글로벌 설정에 의도한 이메일이 등록되어 있는지 확인.

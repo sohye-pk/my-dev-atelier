@@ -1,0 +1,8 @@
+services:
+  web-server:
+    build: .
+    ports:
+      - "9000:9000" # 호스트 포트 9000 : 컨테이너 포트 9000
+    environment:
+      - APP_PORT=9000
+      - APP_MODE=Staging
