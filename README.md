@@ -952,6 +952,10 @@ Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 Warning: Permanently added 'github.com' (ED25519) to the list of known hosts.
 Hi 이름! You've successfully authenticated, but GitHub does not provide shell access.
 
+# ssh키를 복사해서 GitHub에 등록
+user ~/my-dev-atelier % cat ~/.ssh/id_ed25519.pub
+ssh-ed25519 ...
+
 # HTTPS로 연결된 저장소 변경 
 # 변경 시 git remote set-url origin git@github.com:사용자명/저장소명.git
 # 추가 시 git remote add origin git@github.com:사용자명/저장소명.git
